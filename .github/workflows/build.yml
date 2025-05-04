@@ -10,11 +10,10 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the code from GitHub repository
+    # Checkout code from GitHub repository
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -30,17 +29,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Set environment variable to disable touch and GUI, headless mode
+    # Install missing dependencies for Kivy to avoid issues with 'libmtdev.so.1' and other errors
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libmtdev-dev libgl1-mesa-glx libgles2-mesa libx11-dev
+
+    # Set environment variables to disable touch input and set headless mode for Kivy
     - name: Set Kivy to run in headless mode and disable touch input
       run: |
-        echo "KIVY_METRICS_FALLBACK=1" >> $GITHUB_ENV
-        echo "KIVY_METRICS_DENSITY=1" >> $GITHUB_ENV
-        echo "KIVY_METRICS_HEADLESS=1" >> $GITHUB_ENV  # Ensure headless mode (no display)
+        echo "KIVY_METRICS_FALLBACK=1" >> $GITHUB_ENV  # Disable touch input
+        echo "KIVY_METRICS_DENSITY=1" >> $GITHUB_ENV  # Set default density
+        echo "KIVY_METRICS_HEADLESS=1" >> $GITHUB_ENV  # Run in headless mode (no display)
         export KIVY_METRICS_FALLBACK=1
         export KIVY_METRICS_DENSITY=1
         export KIVY_METRICS_HEADLESS=1
 
-    # Run the Kivy app (this command will execute the script)
+    # Run the Kivy app
     - name: Run Kivy app
       run: |
         python calculator_app.py
