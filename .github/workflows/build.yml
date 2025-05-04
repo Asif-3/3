@@ -30,18 +30,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Set environment variable to disable touch and run Kivy in headless mode
-    - name: Set Kivy to run in headless mode and disable touch
+    # Set environment variable to disable touch and GUI, headless mode
+    - name: Set Kivy to run in headless mode and disable touch input
       run: |
-        echo "KIVY_METRICS_DENSITY=1" >> $GITHUB_ENV
         echo "KIVY_METRICS_FALLBACK=1" >> $GITHUB_ENV
         echo "KIVY_METRICS_DENSITY=1" >> $GITHUB_ENV
-        echo "KIVY_METRICS_FALLBACK=1" >> $GITHUB_ENV
+        echo "KIVY_METRICS_HEADLESS=1" >> $GITHUB_ENV  # Ensure headless mode (no display)
         export KIVY_METRICS_FALLBACK=1
         export KIVY_METRICS_DENSITY=1
-        export KIVY_METRICS_HEADLESS=1  # Run in headless mode, disabling graphics
+        export KIVY_METRICS_HEADLESS=1
 
-    # Run the Kivy app (example command to test if it's working)
+    # Run the Kivy app (this command will execute the script)
     - name: Run Kivy app
       run: |
         python calculator_app.py
