@@ -1,51 +1,59 @@
-name: Python application
+name: Python Kivy Application
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
   pull_request:
-    branches:
-      - main
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout code from GitHub repository
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    # Set up Python environment
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-
-    # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    # Install missing dependencies for Kivy to avoid issues with 'libmtdev.so.1' and other errors
+        
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libmtdev-dev libgl1-mesa-glx libgles2-mesa libx11-dev
-
-    # Set environment variables to disable touch input and set headless mode for Kivy
-    - name: Set Kivy to run in headless mode and disable touch input
+        sudo apt-get install -y \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libportmidi-dev \
+          libswscale-dev \
+          libavformat-dev \
+          libavcodec-dev \
+          zlib1g-dev \
+          libgstreamer1.0-dev \
+          libmtdev-dev \
+          xvfb
+        
+    - name: Install Python dependencies
       run: |
-        echo "KIVY_METRICS_FALLBACK=1" >> $GITHUB_ENV  # Disable touch input
-        echo "KIVY_METRICS_DENSITY=1" >> $GITHUB_ENV  # Set default density
-        echo "KIVY_METRICS_HEADLESS=1" >> $GITHUB_ENV  # Run in headless mode (no display)
-        export KIVY_METRICS_FALLBACK=1
-        export KIVY_METRICS_DENSITY=1
-        export KIVY_METRICS_HEADLESS=1
-
-    # Run the Kivy app
-    - name: Run Kivy app
+        python -m pip install --upgrade pip
+        pip install kivy pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        
+    - name: Run tests with virtual display
       run: |
-        python calculator_app.py
+        xvfb-run -a python -m pytest tests/ -v
+      if: hashFiles('tests/**/*.py') != ''
+      
+    - name: Run Kivy app with virtual display
+      run: |
+        export KIVY_NO_ARGS=1
+        export KIVY_NO_CONSOLELOG=1
+        xvfb-run -a python calculator_app.py --headless
+      
+    - name: Build distribution
+      run: |
+        pip install build
+        python -m build
+      if: hashFiles('setup.py') != '' || hashFiles('pyproject.toml') != ''
