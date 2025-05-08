@@ -41,19 +41,30 @@ jobs:
           git \
           meson
 
+    - name: Verify pkg-config paths for GObject Introspection
+      run: |
+        pkg-config --exists --print-errors "gobject-introspection-1.0"
+        pkg-config --exists --print-errors "girepository-1.0"
+        echo "PKG_CONFIG_PATH before: $PKG_CONFIG_PATH"
+        export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/lib/pkgconfig:/usr/share/pkgconfig"
+        echo "PKG_CONFIG_PATH after: $PKG_CONFIG_PATH"
+        pkg-config --modversion gobject-introspection-1.0 || echo "gobject-introspection-1.0 not found"
+        pkg-config --modversion girepository-1.0 || echo "girepository-1.0 not found"
+        pkg-config --modversion girepository-2.0 || echo "girepository-2.0 not found"
+        ls -la /usr/lib/pkgconfig/ | grep girepo
+
+    - name: Install PyGObject using system package
+      run: |
+        sudo apt-get install -y python3-gi
+
     - name: Update pip and install build tools
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install meson meson-python
 
-    - name: Install PyGObject dependencies
+    - name: Install Toga with specific dependencies
       run: |
-        pip install --use-pep517 pycairo
-        pip install --use-pep517 pygobject
-
-    - name: Install Toga
-      run: |
-        pip install toga briefcase
+        pip install pycairo
+        CFLAGS="-I/usr/include/gobject-introspection-1.0" PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig" pip install toga briefcase
 
     - name: Run calculator app
       run: python calculator_app.py
