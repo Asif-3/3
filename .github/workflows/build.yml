@@ -1,22 +1,24 @@
-name: Build Toga Calculator
+name: Python Toga CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install system dependencies for pycairo
-      run: sudo apt-get update && sudo apt-get install -y libcairo2-dev libgirepository1.0-dev pkg-config python3-gi
+    - name: Install system dependencies for Toga GTK
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libcairo2-dev \
+          libgirepository1.0-dev \
+          python3-gi \
+          gir1.2-gtk-3.0 \
+          pkg-config
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -28,5 +30,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install toga
 
-    - name: Syntax check
-      run: python -m py_compile calculator_app.py
+    - name: Run calculator app
+      run: |
+        python calculator_app.py
